@@ -1,5 +1,6 @@
 from imutils.perspective import four_point_transform
 from ultralytics import YOLO
+from autocorrect import Speller
 import numpy as np
 import pandas as pd
 import pytesseract
@@ -69,14 +70,28 @@ rgb = cv2.cvtColor(card, cv2.COLOR_BGR2RGB)
 pytesseract.pytesseract.tesseract_cmd = r'C:\Users\beedz\AppData\Local\Tesseract-OCR\tesseract.exe'
 EngText = pytesseract.image_to_string(rgb)
 RusText = pytesseract.image_to_string(rgb, lang='rus')
+
+# Создаем объекты Speller для английского и русского языков
+en_spell = Speller(lang='en')
+ru_spell = Speller(lang='ru')
+
+# Исправляем слова на английском языке
+corrected_eng_text = [en_spell(word) for word in EngText.split()]
+corrected_eng_text = ' '.join(corrected_eng_text)
+
+# Исправляем слова на русском языке
+corrected_rus_text = [ru_spell(word) for word in RusText.split()]
+corrected_rus_text = ' '.join(corrected_rus_text)
+
 # use regular expressions to parse out phone numbers and email
 # addresses from the business card
-phoneNums = re.findall(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]', EngText)
-emails = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", EngText)
+phoneNums = re.findall(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]', corrected_eng_text)
+emails = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", corrected_eng_text)
 # attempt to use regular expressions to parse out names/titles (not
 # necessarily reliable)
 nameExp = r"^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}"
-names = re.findall(nameExp, RusText)
+names = re.findall(nameExp, corrected_rus_text)
+
 # show the phone numbers header
 print("PHONE NUMBERS")
 print("=============")
@@ -101,11 +116,13 @@ for name in names:
   print(name.strip())
 
 df_information_from_cards = pd.DataFrame(
-	{
-		"Name/Job title": [names],
-		"Emails": [emails],
-		"Phone Number": [phoneNums]
-	}
+    {
+        "Name/Job title": [', '.join(names)],
+        "Emails": [', '.join(emails)],
+        "Phone Number": [', '.join(phoneNums)],
+        "Corrected English Text": [corrected_eng_text],
+        "Corrected Russian Text": [corrected_rus_text]
+    }
 )
 
 print(df_information_from_cards)
