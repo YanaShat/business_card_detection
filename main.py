@@ -90,7 +90,8 @@ emails = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+", corrected_eng_te
 # attempt to use regular expressions to parse out names/titles (not
 # necessarily reliable)
 nameExp = r"^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}"
-names = re.findall(nameExp, corrected_rus_text)
+ru_names = re.findall(nameExp, corrected_rus_text)
+eng_names = re.findall(nameExp, corrected_eng_text)
 
 # show the phone numbers header
 print("PHONE NUMBERS")
@@ -112,17 +113,21 @@ print("NAME/JOB TITLE")
 print("==============")
 # loop over the detected name/job titles and print them to our
 # terminal
-for name in names:
-  print(name.strip())
+# for ru_name in ru_names:
+#   print(ru_name.strip())
 
+for eng_name in eng_names:
+  print(eng_name.strip())
+
+# print(corrected_eng_text)
 df_information_from_cards = pd.DataFrame(
     {
-        "Name/Job title": [', '.join(names)],
+        "Name/Job title": [', '.join(eng_names)],
         "Emails": [', '.join(emails)],
         "Phone Number": [', '.join(phoneNums)],
         "Corrected English Text": [corrected_eng_text],
         "Corrected Russian Text": [corrected_rus_text]
     }
 )
-
-print(df_information_from_cards)
+for inf in df_information_from_cards:
+    print(df_information_from_cards[inf])
