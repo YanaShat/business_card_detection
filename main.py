@@ -1,6 +1,7 @@
 from imutils.perspective import four_point_transform
 from ultralytics import YOLO
 from autocorrect import Speller
+import mysql.connector
 import numpy as np
 import pandas as pd
 import pytesseract
@@ -8,6 +9,17 @@ import argparse
 import imutils
 import cv2
 import re
+
+# Подключение к удаленному MySQL серверу
+mydb = mysql.connector.connect(
+  host="100.114.35.34",
+  user="pidor",
+  password="Password12!@",
+  database="BASE_FOR_TEST"  # Используйте вашу базу данных
+)
+
+# Создание курсора и выполнение запросов
+cursor = mydb.cursor()
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -131,3 +143,24 @@ df_information_from_cards = pd.DataFrame(
 )
 for inf in df_information_from_cards:
     print(df_information_from_cards[inf])
+
+# Пример выполнения запроса INSERT
+for index, row in df_information_from_cards.iterrows():
+    name = row["Name/Job title"]
+    email = row["Emails"]
+    phone = row["Phone Number"]
+    corrected_eng_text = row["Corrected English Text"]
+    corrected_rus_text = row["Corrected Russian Text"]
+
+    # Выполнение запроса INSERT
+    sql = "INSERT INTO table_for_test (name, email, phone, corrected_eng_text, corrected_rus_text) VALUES (%s, %s, %s, %s, %s)"
+    val = (name, email, phone, corrected_eng_text, corrected_rus_text)
+    cursor.execute(sql, val)
+
+
+# Подтверждение выполнения изменений
+mydb.commit()
+
+# Закрытие курсора и соединения
+cursor.close()
+mydb.close()
