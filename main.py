@@ -9,6 +9,13 @@ import argparse
 import imutils
 import cv2
 import re
+import nltk #для Т9
+from nltk.corpus import words
+from nltk.metrics.distance import ( edit_distance, jaccard_distance)
+from nltk.util import ngrams
+nltk.download('words')
+import pandas
+
 
 # Подключение к удаленному MySQL серверу
 mydb = mysql.connector.connect(
@@ -87,13 +94,24 @@ RusText = pytesseract.image_to_string(rgb, lang='rus')
 en_spell = Speller(lang='en')
 ru_spell = Speller(lang='ru')
 
+def jaccard(entries, gram_number):#Т9
+    outcomes = []
+    for entry in entries: #iteratively for loop
+        spellings = spellings_series[spellings_series.str.startswith(entry[0])]
+        distances = ((jaccard_distance(set(ngrams(entry, gram_number)),
+        set(ngrams(word, gram_number))), word)
+    for word in spellings)
+        closest = min(distances)
+        outcomes.append(closest[1])
+    return outcomes
+
 # Исправляем слова на английском языке
 corrected_eng_text = [en_spell(word) for word in EngText.split()]
-corrected_eng_text = ' '.join(corrected_eng_text)
+corrected_eng_text = ' '.join(jaccard(corrected_eng_text))
 
 # Исправляем слова на русском языке
 corrected_rus_text = [ru_spell(word) for word in RusText.split()]
-corrected_rus_text = ' '.join(corrected_rus_text)
+corrected_rus_text = ' '.join(jaccard(corrected_rus_text))
 
 # use regular expressions to parse out phone numbers and email
 # addresses from the business card
